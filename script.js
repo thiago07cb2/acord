@@ -32,7 +32,8 @@ const elementos = {
     btnBuscar: document.getElementById('btnBuscar'),
     btnNovoAcordo: document.getElementById('btnNovoAcordo'),
     buscaProcesso: document.getElementById('buscaProcesso'),
-    btnHistorico: document.getElementById('btnHistorico')
+    btnHistorico: document.getElementById('btnHistorico'),
+    statusTexto: document.getElementById('statusTexto')
 };
 
 // Aguardar Firebase carregar
@@ -51,6 +52,16 @@ function aguardarFirebase() {
     });
 }
 
+// Atualizar status bar (com verificação de segurança)
+function atualizarStatusBar(mensagem, cor = '#1f8a6e') {
+    if (elementos.statusTexto) {
+        elementos.statusTexto.innerHTML = mensagem;
+        elementos.statusTexto.style.color = cor;
+    } else {
+        console.log('Status:', mensagem);
+    }
+}
+
 // Função para carregar acordo do Firebase
 async function carregarAcordo(numeroProcesso) {
     try {
@@ -64,20 +75,20 @@ async function carregarAcordo(numeroProcesso) {
             pagamentosAtuais = data.pagamentos || [];
             
             // Preenche formulário
-            elementos.codigoCoop.value = acordoAtual.cooperativa?.codigo || '';
-            elementos.nomeCoop.value = acordoAtual.cooperativa?.nome || '';
-            elementos.numeroProcesso.value = acordoAtual.numeroProcesso || '';
-            elementos.nomeParte.value = acordoAtual.parte?.nome || '';
-            elementos.cpf.value = acordoAtual.parte?.cpf || '';
-            elementos.dataAjuizamento.value = acordoAtual.dataAjuizamento || '';
-            elementos.comarca.value = acordoAtual.comarca || '';
-            elementos.tipoAcao.value = acordoAtual.tipoAcao || '';
-            elementos.numContrato.value = acordoAtual.numeroContrato || '';
-            elementos.tipoOperacao.value = acordoAtual.tipoOperacao || '';
-            elementos.valorCausa.value = acordoAtual.valorCausa || 0;
-            elementos.qtdParcelas.value = acordoAtual.quantidadeParcelas || 0;
-            elementos.valorParcela.value = acordoAtual.valorParcela || 0;
-            elementos.observacoes.value = data.observacoes || '';
+            if (elementos.codigoCoop) elementos.codigoCoop.value = acordoAtual.cooperativa?.codigo || '';
+            if (elementos.nomeCoop) elementos.nomeCoop.value = acordoAtual.cooperativa?.nome || '';
+            if (elementos.numeroProcesso) elementos.numeroProcesso.value = acordoAtual.numeroProcesso || '';
+            if (elementos.nomeParte) elementos.nomeParte.value = acordoAtual.parte?.nome || '';
+            if (elementos.cpf) elementos.cpf.value = acordoAtual.parte?.cpf || '';
+            if (elementos.dataAjuizamento) elementos.dataAjuizamento.value = acordoAtual.dataAjuizamento || '';
+            if (elementos.comarca) elementos.comarca.value = acordoAtual.comarca || '';
+            if (elementos.tipoAcao) elementos.tipoAcao.value = acordoAtual.tipoAcao || '';
+            if (elementos.numContrato) elementos.numContrato.value = acordoAtual.numeroContrato || '';
+            if (elementos.tipoOperacao) elementos.tipoOperacao.value = acordoAtual.tipoOperacao || '';
+            if (elementos.valorCausa) elementos.valorCausa.value = acordoAtual.valorCausa || 0;
+            if (elementos.qtdParcelas) elementos.qtdParcelas.value = acordoAtual.quantidadeParcelas || 0;
+            if (elementos.valorParcela) elementos.valorParcela.value = acordoAtual.valorParcela || 0;
+            if (elementos.observacoes) elementos.observacoes.value = data.observacoes || '';
             
             atualizarInterface();
             atualizarStatusBar(`🟢 Acordo carregado: ${numeroProcesso}`);
@@ -106,12 +117,12 @@ async function salvarAcordo() {
         const dadosParaSalvar = {
             acordo: acordoAtual,
             pagamentos: pagamentosAtuais,
-            observacoes: elementos.observacoes.value,
+            observacoes: elementos.observacoes ? elementos.observacoes.value : '',
             ultimaAtualizacao: new Date().toISOString()
         };
         
         await setDoc(docRef, dadosParaSalvar);
-        atualizarStatusBar(`✅ Acordo salvo em: ${new Date().toLocaleTimeString()}`);
+        atualizarStatusBar(`✅ Acordo salvo em: ${new Date().toLocaleTimeString()}`, '#28a745');
         setTimeout(() => {
             atualizarStatusBar(`🟢 Acordo ativo: ${acordoAtual.numeroProcesso}`);
         }, 2000);
@@ -120,21 +131,6 @@ async function salvarAcordo() {
         console.error('Erro ao salvar:', error);
         alert('Erro ao salvar no Firebase');
         return false;
-    }
-}
-
-// Atualizar status bar
-function atualizarStatusBar(mensagem) {
-    const statusElement = document.getElementById('statusTexto');
-    if (statusElement) {
-        statusElement.innerHTML = mensagem;
-        if (mensagem.includes('🟢')) {
-            statusElement.style.color = '#1f8a6e';
-        } else if (mensagem.includes('✅')) {
-            statusElement.style.color = '#28a745';
-        } else if (mensagem.includes('🟡')) {
-            statusElement.style.color = '#ffc107';
-        }
     }
 }
 
@@ -166,23 +162,23 @@ function novoAcordo() {
     pagamentosAtuais = [];
     
     // Limpa formulário
-    elementos.codigoCoop.value = '';
-    elementos.nomeCoop.value = '';
-    elementos.numeroProcesso.value = numeroProcesso;
-    elementos.nomeParte.value = '';
-    elementos.cpf.value = '';
-    elementos.dataAjuizamento.value = '';
-    elementos.comarca.value = '';
-    elementos.tipoAcao.value = '';
-    elementos.numContrato.value = '';
-    elementos.tipoOperacao.value = '';
-    elementos.valorCausa.value = '';
-    elementos.qtdParcelas.value = '';
-    elementos.valorParcela.value = '';
-    elementos.observacoes.value = '';
+    if (elementos.codigoCoop) elementos.codigoCoop.value = '';
+    if (elementos.nomeCoop) elementos.nomeCoop.value = '';
+    if (elementos.numeroProcesso) elementos.numeroProcesso.value = numeroProcesso;
+    if (elementos.nomeParte) elementos.nomeParte.value = '';
+    if (elementos.cpf) elementos.cpf.value = '';
+    if (elementos.dataAjuizamento) elementos.dataAjuizamento.value = '';
+    if (elementos.comarca) elementos.comarca.value = '';
+    if (elementos.tipoAcao) elementos.tipoAcao.value = '';
+    if (elementos.numContrato) elementos.numContrato.value = '';
+    if (elementos.tipoOperacao) elementos.tipoOperacao.value = '';
+    if (elementos.valorCausa) elementos.valorCausa.value = '';
+    if (elementos.qtdParcelas) elementos.qtdParcelas.value = '';
+    if (elementos.valorParcela) elementos.valorParcela.value = '';
+    if (elementos.observacoes) elementos.observacoes.value = '';
     
     atualizarInterface();
-    atualizarStatusBar(`🟡 Novo acordo criado: ${numeroProcesso} (preencha os dados)`);
+    atualizarStatusBar(`🟡 Novo acordo criado: ${numeroProcesso} (preencha os dados)`, '#ffc107');
     alert('Novo acordo criado. Preencha os dados e eles serão salvos automaticamente.');
 }
 
@@ -196,22 +192,24 @@ function atualizarInterface() {
     
     const saldoAtual = acordoAtual.valorCausa - totalPago;
     
-    elementos.valorDebito.innerText = `R$ ${acordoAtual.valorCausa.toFixed(2).replace('.', ',')}`;
-    elementos.totalPago.innerText = `R$ ${totalPago.toFixed(2).replace('.', ',')}`;
-    elementos.qtdParcelasResumo.innerText = acordoAtual.quantidadeParcelas || 0;
-    elementos.valorParcelaResumo.innerText = `R$ ${(acordoAtual.valorParcela || 0).toFixed(2).replace('.', ',')}`;
-    elementos.saldoDevedor.innerText = `R$ ${saldoAtual.toFixed(2).replace('.', ',')}`;
+    if (elementos.valorDebito) elementos.valorDebito.innerText = `R$ ${acordoAtual.valorCausa.toFixed(2).replace('.', ',')}`;
+    if (elementos.totalPago) elementos.totalPago.innerText = `R$ ${totalPago.toFixed(2).replace('.', ',')}`;
+    if (elementos.qtdParcelasResumo) elementos.qtdParcelasResumo.innerText = acordoAtual.quantidadeParcelas || 0;
+    if (elementos.valorParcelaResumo) elementos.valorParcelaResumo.innerText = `R$ ${(acordoAtual.valorParcela || 0).toFixed(2).replace('.', ',')}`;
+    if (elementos.saldoDevedor) elementos.saldoDevedor.innerText = `R$ ${saldoAtual.toFixed(2).replace('.', ',')}`;
     
     renderizarTabela();
     
     // Próxima parcela
     const proximaPendente = pagamentosAtuais.find(p => p.status === 'pendente');
-    if (proximaPendente && elementos.proximaInfo) {
-        elementos.proximaInfo.innerHTML = `⏳ Próxima parcela prevista: ${proximaPendente.mesReferencia} (Parcela ${proximaPendente.parcela}) - Valor: R$ ${(acordoAtual.valorParcela || 0).toFixed(2)}`;
-    } else if (pagamentosAtuais.length > 0 && elementos.proximaInfo) {
-        elementos.proximaInfo.innerHTML = '✅ Todas as parcelas quitadas! Acordo encerrado.';
-    } else if (elementos.proximaInfo) {
-        elementos.proximaInfo.innerHTML = '📌 Nenhuma parcela registrada ainda. Preencha a quantidade de parcelas.';
+    if (elementos.proximaInfo) {
+        if (proximaPendente) {
+            elementos.proximaInfo.innerHTML = `⏳ Próxima parcela prevista: ${proximaPendente.mesReferencia} (Parcela ${proximaPendente.parcela}) - Valor: R$ ${(acordoAtual.valorParcela || 0).toFixed(2)}`;
+        } else if (pagamentosAtuais.length > 0) {
+            elementos.proximaInfo.innerHTML = '✅ Todas as parcelas quitadas! Acordo encerrado.';
+        } else {
+            elementos.proximaInfo.innerHTML = '📌 Nenhuma parcela registrada ainda. Preencha a quantidade de parcelas.';
+        }
     }
 }
 
@@ -221,6 +219,11 @@ function renderizarTabela() {
     
     elementos.tbodyPagamentos.innerHTML = '';
     let saldoCorrente = acordoAtual.valorCausa;
+    
+    if (pagamentosAtuais.length === 0) {
+        elementos.tbodyPagamentos.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum pagamento registrado</td></tr>';
+        return;
+    }
     
     for (let p of pagamentosAtuais) {
         const row = document.createElement('tr');
@@ -242,16 +245,17 @@ function renderizarTabela() {
         `;
         elementos.tbodyPagamentos.appendChild(row);
     }
-    
-    if (pagamentosAtuais.length === 0) {
-        elementos.tbodyPagamentos.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum pagamento registrado</td></tr>';
-    }
 }
 
 // Registrar pagamento
 async function registrarPagamento() {
     if (!acordoAtual) {
         alert('Carregue ou crie um acordo primeiro!');
+        return;
+    }
+    
+    if (!elementos.mesReferencia || !elementos.valorPagoMes) {
+        alert('Elementos do formulário não encontrados');
         return;
     }
     
@@ -301,12 +305,14 @@ async function registrarPagamento() {
     
     await salvarAcordo();
     atualizarInterface();
-    elementos.valorPagoMes.value = '0.00';
+    if (elementos.valorPagoMes) elementos.valorPagoMes.value = '0.00';
     alert(`Pagamento da parcela ${parcelaPendente.parcela} registrado com sucesso!`);
 }
 
 // Buscar acordo
 async function buscarAcordo() {
+    if (!elementos.buscaProcesso) return;
+    
     const numProcesso = elementos.buscaProcesso.value.trim();
     if (!numProcesso) {
         alert('Digite o número do processo para buscar.');
@@ -329,22 +335,22 @@ function atualizarDadosAcordo() {
     if (!acordoAtual) return;
     
     acordoAtual.cooperativa = {
-        codigo: elementos.codigoCoop.value,
-        nome: elementos.nomeCoop.value
+        codigo: elementos.codigoCoop ? elementos.codigoCoop.value : '',
+        nome: elementos.nomeCoop ? elementos.nomeCoop.value : ''
     };
-    acordoAtual.numeroProcesso = elementos.numeroProcesso.value;
+    acordoAtual.numeroProcesso = elementos.numeroProcesso ? elementos.numeroProcesso.value : '';
     acordoAtual.parte = {
-        nome: elementos.nomeParte.value,
-        cpf: elementos.cpf.value
+        nome: elementos.nomeParte ? elementos.nomeParte.value : '',
+        cpf: elementos.cpf ? elementos.cpf.value : ''
     };
-    acordoAtual.dataAjuizamento = elementos.dataAjuizamento.value;
-    acordoAtual.comarca = elementos.comarca.value;
-    acordoAtual.tipoAcao = elementos.tipoAcao.value;
-    acordoAtual.numeroContrato = elementos.numContrato.value;
-    acordoAtual.tipoOperacao = elementos.tipoOperacao.value;
-    acordoAtual.valorCausa = parseFloat(elementos.valorCausa.value) || 0;
-    acordoAtual.quantidadeParcelas = parseInt(elementos.qtdParcelas.value) || 0;
-    acordoAtual.valorParcela = parseFloat(elementos.valorParcela.value) || 0;
+    acordoAtual.dataAjuizamento = elementos.dataAjuizamento ? elementos.dataAjuizamento.value : '';
+    acordoAtual.comarca = elementos.comarca ? elementos.comarca.value : '';
+    acordoAtual.tipoAcao = elementos.tipoAcao ? elementos.tipoAcao.value : '';
+    acordoAtual.numeroContrato = elementos.numContrato ? elementos.numContrato.value : '';
+    acordoAtual.tipoOperacao = elementos.tipoOperacao ? elementos.tipoOperacao.value : '';
+    acordoAtual.valorCausa = elementos.valorCausa ? parseFloat(elementos.valorCausa.value) || 0 : 0;
+    acordoAtual.quantidadeParcelas = elementos.qtdParcelas ? parseInt(elementos.qtdParcelas.value) || 0 : 0;
+    acordoAtual.valorParcela = elementos.valorParcela ? parseFloat(elementos.valorParcela.value) || 0 : 0;
     
     // Se não tem parcelas e quantidade foi definida, criar a primeira
     if (pagamentosAtuais.length === 0 && acordoAtual.quantidadeParcelas > 0 && acordoAtual.valorParcela > 0) {
