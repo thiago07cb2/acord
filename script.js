@@ -1,4 +1,4 @@
-// script.js - Gerenciamento completo com Firebase (sem dados.json)
+// script.js - Gerenciamento completo com Firebase
 
 let acordoAtual = null;
 let pagamentosAtuais = [];
@@ -35,6 +35,22 @@ const elementos = {
     btnHistorico: document.getElementById('btnHistorico')
 };
 
+// Aguardar Firebase carregar
+function aguardarFirebase() {
+    return new Promise((resolve) => {
+        if (window.firebaseHelpers && window.db) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.firebaseHelpers && window.db) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
+
 // Função para carregar acordo do Firebase
 async function carregarAcordo(numeroProcesso) {
     try {
@@ -64,7 +80,7 @@ async function carregarAcordo(numeroProcesso) {
             elementos.observacoes.value = data.observacoes || '';
             
             atualizarInterface();
-            document.getElementById('statusTexto').innerHTML = `🟢 Acordo carregado: ${numeroProcesso}`;
+            atualizarStatusBar(`🟢 Acordo carregado: ${numeroProcesso}`);
             return true;
         } else {
             alert('Acordo não encontrado! Crie um novo acordo.');
@@ -80,7 +96,6 @@ async function carregarAcordo(numeroProcesso) {
 // Função para salvar acordo no Firebase
 async function salvarAcordo() {
     if (!acordoAtual) {
-        alert('Nenhum acordo carregado');
         return false;
     }
     
@@ -96,15 +111,30 @@ async function salvarAcordo() {
         };
         
         await setDoc(docRef, dadosParaSalvar);
-        document.getElementById('statusTexto').innerHTML = `✅ Acordo salvo em: ${new Date().toLocaleTimeString()}`;
+        atualizarStatusBar(`✅ Acordo salvo em: ${new Date().toLocaleTimeString()}`);
         setTimeout(() => {
-            document.getElementById('statusTexto').innerHTML = `🟢 Acordo ativo: ${acordoAtual.numeroProcesso}`;
+            atualizarStatusBar(`🟢 Acordo ativo: ${acordoAtual.numeroProcesso}`);
         }, 2000);
         return true;
     } catch (error) {
         console.error('Erro ao salvar:', error);
         alert('Erro ao salvar no Firebase');
         return false;
+    }
+}
+
+// Atualizar status bar
+function atualizarStatusBar(mensagem) {
+    const statusElement = document.getElementById('statusTexto');
+    if (statusElement) {
+        statusElement.innerHTML = mensagem;
+        if (mensagem.includes('🟢')) {
+            statusElement.style.color = '#1f8a6e';
+        } else if (mensagem.includes('✅')) {
+            statusElement.style.color = '#28a745';
+        } else if (mensagem.includes('🟡')) {
+            statusElement.style.color = '#ffc107';
+        }
     }
 }
 
@@ -152,7 +182,7 @@ function novoAcordo() {
     elementos.observacoes.value = '';
     
     atualizarInterface();
-    document.getElementById('statusTexto').innerHTML = `🟡 Novo acordo criado: ${numeroProcesso} (preencha os dados)`;
+    atualizarStatusBar(`🟡 Novo acordo criado: ${numeroProcesso} (preencha os dados)`);
     alert('Novo acordo criado. Preencha os dados e eles serão salvos automaticamente.');
 }
 
@@ -176,18 +206,18 @@ function atualizarInterface() {
     
     // Próxima parcela
     const proximaPendente = pagamentosAtuais.find(p => p.status === 'pendente');
-    if (proximaPendente) {
+    if (proximaPendente && elementos.proximaInfo) {
         elementos.proximaInfo.innerHTML = `⏳ Próxima parcela prevista: ${proximaPendente.mesReferencia} (Parcela ${proximaPendente.parcela}) - Valor: R$ ${(acordoAtual.valorParcela || 0).toFixed(2)}`;
-    } else if (pagamentosAtuais.length > 0) {
+    } else if (pagamentosAtuais.length > 0 && elementos.proximaInfo) {
         elementos.proximaInfo.innerHTML = '✅ Todas as parcelas quitadas! Acordo encerrado.';
-    } else {
+    } else if (elementos.proximaInfo) {
         elementos.proximaInfo.innerHTML = '📌 Nenhuma parcela registrada ainda. Preencha a quantidade de parcelas.';
     }
 }
 
 // Renderizar tabela de pagamentos
 function renderizarTabela() {
-    if (!acordoAtual) return;
+    if (!acordoAtual || !elementos.tbodyPagamentos) return;
     
     elementos.tbodyPagamentos.innerHTML = '';
     let saldoCorrente = acordoAtual.valorCausa;
@@ -354,10 +384,10 @@ function verHistorico() {
 
 // Eventos
 function setupEventListeners() {
-    elementos.btnBuscar.addEventListener('click', buscarAcordo);
-    elementos.btnNovoAcordo.addEventListener('click', novoAcordo);
-    elementos.btnRegistrar.addEventListener('click', registrarPagamento);
-    elementos.btnHistorico.addEventListener('click', verHistorico);
+    if (elementos.btnBuscar) elementos.btnBuscar.addEventListener('click', buscarAcordo);
+    if (elementos.btnNovoAcordo) elementos.btnNovoAcordo.addEventListener('click', novoAcordo);
+    if (elementos.btnRegistrar) elementos.btnRegistrar.addEventListener('click', registrarPagamento);
+    if (elementos.btnHistorico) elementos.btnHistorico.addEventListener('click', verHistorico);
     
     // Salvar automaticamente ao perder foco dos campos
     const camposParaSalvar = ['codigoCoop', 'nomeCoop', 'numeroProcesso', 'nomeParte', 'cpf', 'dataAjuizamento', 'comarca', 'tipoAcao', 'numContrato', 'tipoOperacao', 'valorCausa', 'qtdParcelas', 'valorParcela', 'observacoes'];
@@ -377,27 +407,27 @@ function setupEventListeners() {
 }
 
 // Inicialização
-function init() {
+async function init() {
+    await aguardarFirebase();
     setupEventListeners();
+    
     // Carregar último acordo do localStorage se existir
     const ultimoProcesso = localStorage.getItem('ultimoAcordo');
-    if (ultimoProcesso) {
+    if (ultimoProcesso && elementos.buscaProcesso) {
         elementos.buscaProcesso.value = ultimoProcesso;
-        carregarAcordo(ultimoProcesso);
+        await carregarAcordo(ultimoProcesso);
     }
+    
+    atualizarStatusBar('🟢 Sistema pronto!');
 }
 
 // Salvar último processo buscado
 window.addEventListener('beforeunload', () => {
     if (acordoAtual && acordoAtual.numeroProcesso) {
         localStorage.setItem('ultimoAcordo', acordoAtual.numeroProcesso);
-        if (acordoAtual.numeroProcesso) {
-            salvarAcordo();
-        }
+        salvarAcordo();
     }
 });
 
-// Aguardar Firebase carregar
-setTimeout(() => {
-    init();
-}, 500);
+// Iniciar aplicação
+init();
